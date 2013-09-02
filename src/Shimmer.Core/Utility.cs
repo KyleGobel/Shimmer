@@ -188,7 +188,14 @@ namespace Shimmer.Core
             var di = new DirectoryInfo(directoryPath);
 
             // NB: MoveFileEx blows up if you're a non-admin, so you always need a backup plan
-            di.GetFiles().ForEach(x => safeDeleteFileAtNextDir(x.FullName));
+            try {
+                di.GetFiles().ForEach(x => safeDeleteFileAtNextDir(x.FullName));
+            }
+            catch (UnauthorizedAccessException ex) {
+                var message = String.Format("Unauthorized to read the directory {0}", directoryPath);
+                Log().ErrorException(message, ex);
+            }
+
             di.GetDirectories().ForEach(x => DeleteDirectoryAtNextReboot(x.FullName));
 
             safeDeleteFileAtNextDir(directoryPath);
